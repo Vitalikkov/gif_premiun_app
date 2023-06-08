@@ -28,28 +28,28 @@ class _HomeState extends State<Home> {
           ),
           centerTitle: true,
       ),
-      body: Column(
-        children: [
-          TextFieldAutocomplete(
-            onChanged: (value) {
-              updateSelectedValue(value);
-            },
-          ),
-          GridCardTemplete(selectedValue),
-          //CardGif(id: "23521077", url: "https://media.tenor.com/wL59aqQiwzAAAAAC/cat-kitty.gif", preview: "https://media.tenor.com/wL59aqQiwzAAAAAD/cat-kitty.png"),
+      body: Container(
+        padding: EdgeInsets.all(12),
+        child: Column(
+
+          children: [
+            TextFieldAutocomplete(
+              onChanged: (value) {
+                updateSelectedValue(value);
+              },
+            ),
+            SizedBox(height: 12),
+            Expanded(
+              child: selectedValue.isEmpty
+                  ? const Center(
+                child: Text('Не знайдено жодної картинки'),
+              )
+                  : GridCardTemplete(selectedValue),
+            ),
 
 
-          // GridView.builder(
-          //   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          //     crossAxisCount: 2,
-          //   ),
-          //   itemCount: photos.length,
-          //   itemBuilder: (context, index) {
-          //   return Image.network(photos[index].thumbnailUrl);
-          //   },
-          // ),
-
-        ],
+          ],
+        ),
       ),
     );
   }

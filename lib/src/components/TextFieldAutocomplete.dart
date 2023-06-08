@@ -10,6 +10,7 @@ class TextFieldAutocomplete extends StatefulWidget {
   _TextFieldAutocompleteState createState() => _TextFieldAutocompleteState();
 }
 
+
 class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
   final TextEditingController _textEditingController = TextEditingController();
   final Dio _dio = Dio();
@@ -53,9 +54,12 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
 
   void _onSubmitted(String value) {
     _hideSuggestions();
-
-    // Передача значення в наступний віджет або виконання іншої логіки
-    // Ваш код тут
+    setState(() {
+      _selectedSuggestion = '';
+    });
+    if (widget.onChanged != null) {
+      widget.onChanged!(value);
+    }
   }
 
   @override
@@ -86,7 +90,7 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
         TextField(
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            hintText: 'Enter the subject of the gif',
+            hintText: 'Введіть назву картинки',
           ),
           controller: _textEditingController,
           onSubmitted: _onSubmitted,
