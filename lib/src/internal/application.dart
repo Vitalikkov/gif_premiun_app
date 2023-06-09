@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gif_premiun_app/src/pages/home.dart';
+import 'package:gif_premiun_app/src/pages/saved.dart';
 
 class Application extends StatelessWidget {
   const Application({super.key});
@@ -12,7 +13,12 @@ class Application extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Home(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => Home(),
+        '/saves': (context) => Saved(),
+
+      },
     );
   }
 }

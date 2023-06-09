@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gif_premiun_app/src/components/TextFieldAutocomplete.dart' show TextFieldAutocomplete;
 import 'package:gif_premiun_app/src/components/GridCardTemplete.dart';
-import 'package:gif_premiun_app/src/components/CardGif.dart';
+import 'package:gif_premiun_app/src/components/ButtonFooter.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -50,7 +50,9 @@ class _HomeState extends State<Home> {
 
           ],
         ),
+
       ),
+        bottomNavigationBar: ButtonFooter(onPressedHome: (){}, onPressedSaves: (){}, onPressedSettings: (){},),
     );
   }
 }
