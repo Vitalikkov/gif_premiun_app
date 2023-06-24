@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "383027374690",
+    "project_id": "gif-app-9cb4a",
+    "storage_bucket": "gif-app-9cb4a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:383027374690:android:0e163f72d6ea488470ff3b",
+        "android_client_info": {
+          "package_name": "com.example.gif_premiun_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "383027374690-876o7mq8c1f649268a8sr16vi081ontq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCq_yVbD4m2yNulXot3w1a4icHIXMRHjyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "383027374690-876o7mq8c1f649268a8sr16vi081ontq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

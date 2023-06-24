@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:gif_premiun_app/src/db/db.dart';
+import 'package:gif_premiun_app/src/data/db/db.dart';
 import 'package:gif_premiun_app/src/components/CardGif.dart';
-import 'package:gif_premiun_app/src/modal/CardGifsModal.dart';
+import 'package:gif_premiun_app/src/data/models/savedCard_model.dart';
 import 'package:gif_premiun_app/src/components/ButtonFooter.dart';
 
 class Saved extends StatefulWidget {
@@ -12,7 +13,7 @@ class Saved extends StatefulWidget {
 }
 
 class _SavedState extends State<Saved> {
-  List<SavedCard> _cards = [];
+  List<SavedCardModal> _cards = [];
   List<String> ids = [];
   List<String> urls = [];
   List<String> previews = [];
@@ -21,26 +22,26 @@ class _SavedState extends State<Saved> {
   @override
   void initState() {
     super.initState();
-    _getSavedCard();
+    // _getSavedCard();
   }
 
-  void _getSavedCard() async {
-    List<SavedCard> cards = await DatabaseProvider.getSavedCards();
+  // void _getSavedCard() async {
+  //   List<SavedCardModal> cards = await DatabaseSql.getSavedCards();
 
 
-    for (var card in cards) {
-      ids.add(card.id);
-      urls.add(card.url);
-      previews.add(card.preview);
-      descriptions.add(card.contentDescription);
-    }
+  //   for (var card in cards) {
+  //     ids.add(card.id);
+  //     urls.add(card.gifUrl);
+  //     previews.add(card.previewUrl);
+  //     descriptions.add(card.contentDescription);
+  //   }
 
-    setState(() {
-      _cards = cards;
-    });
+  //   setState(() {
+  //     _cards = cards;
+  //   });
 
 
-  }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +53,14 @@ class _SavedState extends State<Saved> {
         ),
         centerTitle: true,
       ),
-      body: Container(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Expanded(
+      body: StreamBuilder(
+        stream: FirebaseFirestore.instance.collection('SaveCard').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if(!snapshot.hasData)
+            return const Center( child: Text('Немає записів'),);
+          return Container(
+            padding: EdgeInsets.all(12),
+            child: Expanded(
               child: GridView.builder(
                 padding: EdgeInsets.all(8.0),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -64,23 +68,23 @@ class _SavedState extends State<Saved> {
                   crossAxisSpacing: 8.0,
                   mainAxisSpacing: 8.0,
                 ),
-                itemCount: ids.length,
+                //itemCount: ids.length,
+                itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, index) {
                   return CardGif(
-                      id: ids[index],
-                      url: urls[index],
-                      preview: previews[index],
-                      content_description: descriptions[index],
-                      isSaved: true,
+                    key: Key(snapshot.data!.docs[index].id),
+                    id: snapshot.data!.docs[index].get('id'),
+                    url: snapshot.data!.docs[index].get('gifUrl'),
+                    preview: snapshot.data!.docs[index].get('previewUrl'),
+                    contentDescription: snapshot.data!.docs[index].get('contentDescription'),
+                    isFavorite: true,
                   );
                 },
               ),
             ),
-
-
-          ],
-        ),
-
+      
+          );
+        }
       ),
       bottomNavigationBar: ButtonFooter(onPressedHome: (){}, onPressedSaves: (){}, onPressedSettings: (){},),
     );
