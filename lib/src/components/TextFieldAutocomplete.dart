@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:gif_premiun_app/src/api/api.dart';
 
 class TextFieldAutocomplete extends StatefulWidget {
   final ValueChanged<String>? onChanged;
@@ -13,25 +13,9 @@ class TextFieldAutocomplete extends StatefulWidget {
 
 class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
   final TextEditingController _textEditingController = TextEditingController();
-  final Dio _dio = Dio();
+  
   List<String> _suggestions = [];
   String _selectedSuggestion = '';
-
-  void _fetchAutocomplete(String pattern) async {
-    try {
-      final response = await _dio.get('https://g.tenor.com/v1/autocomplete?key=LIVDSRZULELA&q=$pattern&limit=5');
-      if (response.statusCode == 200) {
-        final jsonResponse = response.data;
-        final results = List<String>.from(jsonResponse['results']);
-        setState(() {
-          _suggestions = results;
-        });
-      }
-    } catch (error) {
-      print('Error fetching autocomplete: $error');
-    }
-  }
-
 
   void _selectSuggestion(String suggestion) {
     setState(() {
@@ -62,13 +46,26 @@ class _TextFieldAutocompleteState extends State<TextFieldAutocomplete> {
     }
   }
 
+   void _fetchAutocompleteData(String value) async {
+    if (value.isNotEmpty) {
+      final autocompleteData = await Api.fetchAutocomplete(value);
+      setState(() {
+        _suggestions = autocompleteData?.results ?? [];
+      });
+    } else {
+      setState(() {
+        _suggestions = [];
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _textEditingController.addListener(() {
       final value = _textEditingController.text;
       if (value.isNotEmpty) {
-        _fetchAutocomplete(value);
+        _fetchAutocompleteData(value);
       } else {
         setState(() {
           _suggestions = [];

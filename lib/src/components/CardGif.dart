@@ -1,14 +1,18 @@
+
 import 'package:flutter/material.dart';
+import 'package:gif_premiun_app/src/data/models/savedCard_model.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:gif_premiun_app/src/modal/CardGifsModal.dart';
-import 'package:gif_premiun_app/src/db/db.dart';
+import 'package:gif_premiun_app/src/data/db/db.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 
 class CardGif extends StatefulWidget {
   final String id;
   final String url;
   final String preview;
-  final String content_description;
+  final String contentDescription;
+  final bool isFavorite;
   final bool isSaved;
 
   const CardGif({
@@ -16,7 +20,8 @@ class CardGif extends StatefulWidget {
     required this.id,
     required this.url,
     required this.preview,
-    required this.content_description,
+    required this.contentDescription,
+    this.isFavorite = false,
     this.isSaved = false,
   }) : super(key: key);
 
@@ -27,42 +32,55 @@ class CardGif extends StatefulWidget {
 }
 
 class _CardGifState extends State<CardGif> {
-  Map<String, bool> isPressedMap = {};
+  bool isSaved = false;
 
+  Future<void> toggleSavedStatus() async {
+    setState(() {
+      isSaved = !isSaved;
+    });
+
+    if (isSaved) {
+      await saveCard();
+    } else {
+      await deleteCard();
+    }
+  }
+
+  Future<void> saveCard() async {
+    await FirebaseFirestore.instance.collection('SaveCard').add({
+      'id': widget.id,
+      'gifUrl': widget.url,
+      'previewUrl': widget.preview,
+      'contentDescription': widget.contentDescription,
+    });
+  }
+
+  Future<void> deleteCard() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('SaveCard')
+        .where('id', isEqualTo: widget.id)
+        .get();
+
+    querySnapshot.docs.forEach((doc) {
+      doc.reference.delete();
+    });
+  }
+  
 
   @override
   void initState() {
     super.initState();
-    isPressedMap[widget.id] = false;
+
+    isSaved = widget.isSaved;
+   
   }
 
-  void onPressed() {
-    setState(() {
-      if (isPressedMap[widget.id] != null) {
-        isPressedMap[widget.id] = !isPressedMap[widget.id]!;
+  
 
-        if (isPressedMap[widget.id]!) {
-          final savedCard = SavedCard(
-            id: widget.id,
-            url: widget.url,
-            preview: widget.preview,
-            contentDescription: widget.content_description,
-          );
-          DatabaseProvider.insertCard(savedCard);
-        } else {
-          deleteCardFromDatabase();
-        }
-      }
-    });
-  }
-
-  void deleteCardFromDatabase() async {
-    await DatabaseProvider.deleteCard(widget.id);
-  }
+ 
 
   @override
   Widget build(BuildContext context) {
-    final isPressed = isPressedMap[widget.id] ?? false;
     return Card(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
@@ -76,7 +94,7 @@ class _CardGifState extends State<CardGif> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => GifScreen(preview: widget.preview, content_description: widget.content_description),
+                          builder: (context) => GifScreen(preview: widget.preview, contentDescription: widget.contentDescription),
                         ),
                       );
                     },
@@ -98,19 +116,19 @@ class _CardGifState extends State<CardGif> {
                           color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    if (widget.isSaved)
+                    if (widget.isFavorite)
                       IconButton(
-                        onPressed: deleteCardFromDatabase,
+                        onPressed: () {deleteCard();},
                         icon: Icon(
                           Icons.delete,
                           color: Colors.redAccent,
                         ),
                       ),
-                    if (!widget.isSaved)
+                    if (!widget.isFavorite)
                       IconButton(
-                        onPressed: onPressed,
+                        onPressed: toggleSavedStatus,
                         icon: Icon(
-                          isPressed ? Icons.star : Icons.star_border,
+                          isSaved ? Icons.star : Icons.star_border,
                           color: Colors.amber,
                         ),
                       ),
@@ -128,15 +146,15 @@ class _CardGifState extends State<CardGif> {
 
 class GifScreen extends StatelessWidget {
   final String preview;
-  final String content_description;
+  final String contentDescription;
 
-  const GifScreen({Key? key, required this.preview, required this.content_description}) : super(key: key);
+  const GifScreen({Key? key, required this.preview, required this.contentDescription}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(content_description),
+        title: Text(contentDescription),
         centerTitle: true,
       ),
       body: Container(

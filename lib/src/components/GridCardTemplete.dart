@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:gif_premiun_app/src/api/api.dart';
+import 'package:gif_premiun_app/src/api/models/gifs_model.dart';
 import 'package:gif_premiun_app/src/components/CardGif.dart';
 
 class GridCardTemplete extends StatefulWidget {
@@ -12,18 +15,45 @@ class GridCardTemplete extends StatefulWidget {
 }
 
 class _GridCardTempleteState extends State<GridCardTemplete> {
-  Map<String, dynamic> _gifs ={};
+  
   List<String> _id = [];
   List<String> _gifUrl = [];
   List<String> _previewUrl = [];
-  List<String> _content_description = [];
-
+  List<String> _contentDescription = [];
   String selectedValue = '';
+
+
+  void _fetchGifs(String value) async {
+      try {
+      final gifsData = await Api.fetchGifs(selectedValue);
+      
+      setState(() {
+          _id = gifsData.id;
+          _gifUrl = gifsData.gifUrl;
+          _previewUrl = gifsData.previewUrl;
+          _contentDescription = gifsData.contentDescription;
+        });
+    } catch (error) {
+      print('Error fetching gifs: $error');
+    }
+  }
+
+ 
+  Future<bool> isCardSaved(String id) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('SaveCard')
+        .where('id', isEqualTo: id)
+        .get();
+
+    return querySnapshot.docs.isNotEmpty;
+  }
+
+  
 
   @override
   void initState() {
     super.initState();
-    fetchGifs(widget.selectedValue);
+    _fetchGifs(widget.selectedValue);
   }
 
   @override
@@ -31,41 +61,14 @@ class _GridCardTempleteState extends State<GridCardTemplete> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedValue != selectedValue) {
       selectedValue = widget.selectedValue;
-      fetchGifs(selectedValue);
-    }
-  }
-
-  void fetchGifs(String pattern) async {
-    final apiKey = 'LIVDSRZULELA';
-    final apiUrl = 'https://g.tenor.com/v1/search?q=$pattern&key=$apiKey';
-
-    final dio = Dio();
-
-    try {
-      final response = await dio.get<Map<String, dynamic>>(apiUrl);
-
-      if (response.statusCode == 200) {
-        final jsonData = response.data as Map<String, dynamic>;
-        final results = jsonData['results'] as List<dynamic>;
-        setState(() {
-          _gifs = jsonData;
-          _id = results.map((gif) => gif['id'].toString()).toList();
-          _content_description = results.map((gif) => gif['content_description'].toString()).toList();
-          _gifUrl = results.map((gif) => gif['media'][0]['gif']['url'].toString()).toList();
-          _previewUrl = results.map((gif) => gif['media'][0]['gif']['preview'].toString()).toList();
-        });
-      } else {
-        throw Exception('Failed to fetch gifs');
-      }
-    } catch (e) {
-      throw Exception('Failed to fetch gifs: $e');
+      _fetchGifs(selectedValue);
     }
   }
 
 
   @override
   Widget build(BuildContext context) {
-    return _gifs.isEmpty
+    return _id.isEmpty
         ? const Center(
       child: CircularProgressIndicator(),
     )
@@ -78,16 +81,28 @@ class _GridCardTempleteState extends State<GridCardTemplete> {
       ),
       itemCount: _id.length,
       itemBuilder: (context, index) {
-
-
-        return CardGif(
-          id: _id[index],
-          url: _gifUrl[index],
-          preview: _previewUrl[index],
-          content_description: _content_description[index],
-        );
-      },
-    );
+        return FutureBuilder<bool>(
+                future: isCardSaved(_id[index]),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    final isSaved = snapshot.data ?? false;
+                    return CardGif(
+                      id: _id[index],
+                      url: _gifUrl[index],
+                      preview: _previewUrl[index],
+                      contentDescription: _contentDescription[index],
+                      isSaved: isSaved,
+                    );
+                  }
+                },
+              );
+            },
+          );
   }
 }
-
